@@ -1,0 +1,48 @@
+# ─────────────────────────────────────
+# 1) Builder：依存だけをインストール
+# ─────────────────────────────────────
+FROM node:18-bullseye AS builder
+WORKDIR /app
+
+# package*.json をコピーして依存インストール
+COPY package*.json ./
+RUN npm ci --only=production
+
+# 残りソースをコピー
+COPY . .
+
+# ─────────────────────────────────────
+# 2) Prod：Chromium＋最小ライブラリをインストール
+# ─────────────────────────────────────
+FROM node:18-bullseye-slim AS prod
+WORKDIR /app
+
+# 必要な apt パッケージだけ入れる
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      chromium \
+      libnss3 \
+      libatk1.0-0 \
+      libatk-bridge2.0-0 \
+      libcups2 \
+      libx11-xcb1 \
+      libxcomposite1 \
+      libxdamage1 \
+      libxrandr2 \
+      libgbm1 \
+      libasound2 \
+      libpangocairo-1.0-0 \
+      libxshmfence1 \
+ && rm -rf /var/lib/apt/lists/*
+
+# ビルダーからビルド成果物をコピー
+COPY --from=builder /app /app
+
+# npm キャッシュを削除
+RUN npm cache clean --force
+
+# Puppeteer 用バイナリパスを指定
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+
+# 実行コマンド
+CMD ["node", "scripts/scrape_comenu.js"]

@@ -1,0 +1,12 @@
+{
+  "name": "mealmax-scraper",
+  "version": "1.0.0",
+  "main": "scripts/scrape_comenu.js",
+  "scripts": {
+    "start": "node scripts/scrape_comenu.js",
+    "help": "echo \"Usage: --help\""
+  },
+  "dependencies": {
+    "puppeteer": "^20.0.0"
+  }
+}
